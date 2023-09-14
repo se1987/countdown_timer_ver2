@@ -4,35 +4,62 @@ let date = new Date();
 let month = date.getMonth() + 1;
 let year = date.getFullYear();
 let day = date.getDate();
+let countDown;
 
-const minute = document.getElementById("minute");
-const second = document.getElementById("second");
-const startBtn = document.getElementById("start");
-const resetBtn = document.getElementById("reset");
+const today = document.getElementById("today").innerHTML = `${year}年${month}月${day}日`;
 
-let countNumber = 180;
+// タイマーの表示
+const timerDisplay = document.getElementById("display_timeLeft");
+const endTime = document.getElementById('display_endTime');
+const customSeconds = document.getElementById('custom');
+const submit = document.getElementById('submit')
+const buttons = document.querySelectorAll('[data-time]');
 
-minute.textContent = `${Math.floor(countNumber / 60)}分`;
-second.textContent = `${Math.floor(countNumber % 60)}秒`;
+// タイマー関数
+function timer(seconds) {
+    clearInterval(countDown);
 
-startBtn.addEventListener("click",() => {
-    function countDown(){
-        countNumber--;
-        if (countNumber >= 0){
-            let minuteCount = Math.floor(countNumber / 60);
-            let secondCount = Math.floor(countNumber % 60);
-            minute.textContent = `${minuteCount}分`;
-            second.textContent = `${secondCount}秒`;
-        } else {
-            countNumber = 0;
-            clearInterval(intervalId);
+    const now = Date.now();
+    const then = now + seconds * 1000;
+    displayTimeLeft(seconds);
+    displayEndTime(then);
+
+        countDown = setInterval(() => {
+        const secondLeft = Math.floor((then - Date.now()) / 1000);
+        if (secondLeft < 0) {
+            clearInterval(countDown);
+            return;
         }
-    }
-    setInterval(countDown, 1000);
-});
+        displayTimeLeft(secondLeft);
+    }, 1000);
+}
 
-resetBtn.addEventListener("click",() => {
-    location.reload();
-});
+// タイマー表示
+function displayTimeLeft(seconds){
+    const minutes = Math.floor(seconds / 60);
+    const remainderSeconds = Math.floor(seconds % 60);
+    const display = `${minutes}:${remainderSeconds < 10 ? '0' : ''}${remainderSeconds}`;
+    timerDisplay.textContent = display;
+}
 
-document.getElementById("today").innerHTML = `${year}年${month}月${day}日`;
+// 終了時間表示
+function displayEndTime(timestamp){
+    const end = new Date(timestamp);
+    const hour = end.getHours();
+    const minutes = end.getMinutes();
+    const adjustedHour = hour > 12 ? hour - 12 : hour;
+    endTime.textContent = `Until ${adjustedHour}:${minutes < 10 ? '0' : ''}${minutes}`;
+}
+// ボタンに設定された時間のタイマーを起動させるための関数
+function startTimer(){
+    const seconds = parseInt(this.dataset.time);
+    timer(seconds);
+}
+
+buttons.forEach(button => button.addEventListener('click', startTimer));
+
+// 入力フォームのイベントリスナー
+submit.addEventListener('click', function(){
+    const mins = customSeconds.value;
+    timer(mins * 60);
+});
